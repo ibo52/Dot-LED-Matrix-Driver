@@ -1,5 +1,5 @@
-#ifndef LED_MATRIX_CONTROLLER
-#define LED_MATRIX_CONTROLLER
+#ifndef HALO_LED_MATRIX_CONTROLLER
+#define HALO_LED_MATRIX_CONTROLLER
 
 #include <Arduino.h>
 
@@ -25,6 +25,8 @@ class LEDMatrix{
     void blinkLed(int ledNum);
 
     void blinkLed(int row, int col);
+
+    int16_t getNumLeds(void);
 
     private:
 

@@ -1,4 +1,7 @@
+#include <Arduino.h>
 #include <WiFi.h>
+//#include "LEDController.hpp" //matristeki ledleri kontrol etmek için
+
 #define PORT 80
 
 char ssid[] = "ORYAZ";            //ag adi
@@ -23,20 +26,28 @@ void setup() {
 
   Serial.print("\nbaglandi. IP address: ");
   Serial.println(WiFi.localIP());
-  server.begin();                           
+  server.begin();  
+                          
 }
-
 
 void loop() {
   WiFiClient client = server.available();   // listen for incoming clients
+  
+  //GET /mesaj biçiminde geliyor
+  //GET / yazısı okununca sonraki boşluğa kadar olan kısım numerik veri olsun(led numarası)
 
   if (client) {                             
     Serial.println("yeni baglanti istemi");
     String currentLine = "";                // make a String to hold incoming data from the client
+    String context="";
+
     while (client.connected()) {            // loop while the client's connected
+
       if (client.available()) {             // if there's bytes to read from the client,
+
         char c = client.read();             // read a byte, then
         Serial.write(c);                    // print it out the serial monitor
+
         if (c == '\n') {                    // if the byte is a newline character
 
           // if the current line is blank, you got two newline characters in a row.
@@ -49,28 +60,49 @@ void loop() {
             client.println();
 
             // the content of the HTTP response follows the header:
-            client.print("Click <a href=\"/H\">here</a> turn the LED on pin 9 on<br>");
-            client.print("Click <a href=\"/L\">here</a> turn the LED on pin 9 off<br>");
+            client.print("<p> To send data to device: type, for example: http://this-device-address/NUMERIC_DATA<p>");
 
             // The HTTP response ends with another blank line:
             client.println();
+
             // break out of the while loop:
             break;
-          } else {    // if you got a newline, then clear currentLine:
+          } else {
+          /*if you got a newline,check if request contains data,
+          then clear currentLine for new clients*/
+            
+            int idx=currentLine.indexOf("GET /");
+            if(idx>-1){
+              idx+=5;//"GET /" have 5 chars, increment to skip that chars
+
+              String data=currentLine.substring(idx , currentLine.length() );
+              
+              data=data.substring(0, data.indexOf(" "));
+
+              if(  !data.equals("") ){//anasayfaya değil de parametre gönderdiyse
+                Serial.print("incoming \"GET\" data:");
+                Serial.println(data);
+                
+                int ledNum=data.toInt();
+                Serial.print("integer olarak:");
+                Serial.println(ledNum);
+
+                if(!data<0){
+                /*
+                Buradan, gelen veri numerik ise integera çevirecegiz,
+                Sonra LEDController.cpp dosyasından ledi yakacak fonksiyonu çağıracağız
+
+                ledSecLinear()
+                */
+               }
+
+              }
+
+            }
             currentLine = "";
           }
         } else if (c != '\r') {  // if you got anything else but a carriage return character,
           currentLine += c;      // add it to the end of the currentLine
-        }
-
-        // Check to see if the client request was "GET /H" or "GET /L":
-        if (currentLine.endsWith("GET /H")) {
-          //digitalWrite(9, HIGH);               // GET /H turns the LED on
-          Serial.println("/H secildi");
-        }
-        if (currentLine.endsWith("GET /L")) {
-          //digitalWrite(9, LOW);                // GET /L turns the LED off
-          Serial.println("/L secildi");
         }
       }
     }
