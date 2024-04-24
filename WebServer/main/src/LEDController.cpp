@@ -126,3 +126,8 @@ void LEDMatrix::regWrite(byte* shiftRegister, int registerCount, int dataPin, in
 	//End session
 	digitalWrite(latchPin, HIGH);
 }
+
+int16_t LEDMatrix::getNumLeds(void){
+
+   return (this->numLeftReg*8 *this->numTopReg*8);
+}
