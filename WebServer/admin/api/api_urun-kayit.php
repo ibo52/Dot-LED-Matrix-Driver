@@ -2,6 +2,11 @@
 session_start();
 include "db_config.php";
 
+$ERR_NAME_AND_CATEGORY_EMPTY=-1;
+$ERR_NO_PERMISSION=-2;
+$ERR_UNKNOWN=-3;
+$SUCCESS=1;
+
 if (isset($_POST['component-name'])) {
 
     function validate($data){
@@ -14,35 +19,36 @@ if (isset($_POST['component-name'])) {
 	$urunAd = validate($_POST['component-name']);
     $urunEtiket = validate($_POST['component-label']);
     $urunKategori = validate($_POST['component-category']);
+	$urunAltKAtegori = validate($_POST['component-subcategory']);
     $urunKategoriAçıklama = validate($_POST['component-category-description']);
 
 
 	if (empty($urunAd) || empty($urunKategori)) {
-		exit();
+		echo $ERR_NAME_AND_CATEGORY_EMPTY;
+
 	}else{
 
-		$personelId = $_SESSION['userid'];
-		$sql = "set @retval=0;"
-		."call sp_urunEkle($personelId ,'$urunKategori', '$urunKategoriAçıklama', '$urunAd', '$urunEtiket',@retval);"
-		."select @retval";
+		$personelId = $_SESSION['login-userid'];
+		$sql = "call sp_urunEkle($personelId ,'$urunKategori',"
+		."'$urunKategoriAçıklama', '$urunAd', '$urunEtiket',@urunEkle_retval);";
 
 		$result = $conn->query($sql, PDO::FETCH_ASSOC);
+		$result->closeCursor();
 
+		$result=$conn->query("select @urunEkle_retval as retval", PDO::FETCH_ASSOC);
+		$retval= $result->fetchColumn();
         //başarılı başarısız yanıtı
-		$retval=-1;
-		$retval= $result->fetchColumn(PDO::FETCH_ASSOC);
         if  ($retval==1){
 
-			header("Location: ../urun-kayit.php?success=Component registrated successfully!");
+			echo $SUCCESS;
+
         }else if ($retval==0){
-			header("Location: ../urun-kayit.php?error=Could not registrated: You may not have permissions");//.json_encode($retval).json_encode($result));
+			echo $ERR_NO_PERMISSION;
+
 		}else{
-			header("Location: ../urun-kayit.php?error=Bilinmiyor :/");
+			echo $ERR_UNKNOWN." ".$retval;
 		}
-		exit();
 	}
 }else{
-	header("Location: ../urun-kayit.php?nothing");
-	exit();
 }
 ?>

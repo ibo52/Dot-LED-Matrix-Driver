@@ -1,0 +1,145 @@
+<!--Controller script: search -->
+<script type="text/javascript" src="js/ürün-kayıt.js"></script>
+<div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+              <button type="button" class="btn btn-success" data-toggle="modal" data-target="#urun-ekleme-modal">
+              <i class="fas fa-plus"></i> Add a new component
+                </button>
+              </div>
+              <!-- /.card-header -->
+              <div id="urunTableWrapper" class="dataTables_wrapper dt-bootstrap4">
+                <!--Table -->
+                <table id="livesearch-results" class="table table-bordered table-hover">
+                  <!-- Table names-->
+                  <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Product</th>
+                    <th>Label</th>
+                    <th>Option</th>
+                    <th>ek2</th>
+                  </tr>
+                  </thead>
+                  <!-- Table data by querying database -->
+                  <tbody id="ürünTableBody">
+                    <?php
+                    include_once("api/db_config.php");
+
+                    $sql = "select * from ürün";
+
+                    $result = $conn->query($sql, PDO::FETCH_ASSOC);
+
+                      if ($result->rowCount() > 0) {
+
+                        $resultSet= $result->fetchAll(PDO::FETCH_ASSOC);
+
+                        //$resultSet=json_encode($resultSet, JSON_FORCE_OBJECT);
+                        foreach ($resultSet as $row) {
+                          //query occurence done index
+                          echo "<tr>"
+                          ."<td>".$row["id"]."</td>"
+                          ."<td>".$row["ad"]."</td>"
+                          ."<td>".$row["etiket"]."</td>"
+                          .'<td><button type="button" id="'.$row["id"].'" name="blink-button" class="btn btn-block btn-outline-danger btn-lg">'
+                          .'<i class="fas fa-lightbulb"></i> Blink</button></td>'
+                          ."</tr>";
+                        }
+
+                      }
+                    ?>
+                  </tbody>
+                </table>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+            <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div>
+<!-- Ürün ekleme modal menu-->
+<div class="modal fade" id="urun-ekleme-modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header bg-primary">
+                <h4 class="modal-title">Add a new component</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <!-- Form element for component append-->
+                <div class="card">
+                <div class="card-header">
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                  <form action="" method="post">
+                    <h4>Component</h4>
+                    <div class="form-group">
+                      <label for="component-name">Name</label>
+                      <input type="text" class="form-control form-control-border border-width-2" id="component-name" name="component-name" placeholder="Enter a name">
+                    </div>
+                    <!--Component label-->
+                    <div class="form-group">
+                      <label for="component-label">Label</label>
+                      <input type="text" class="form-control form-control-border border-width-2" id="component-label" name="component-label" placeholder="Enter a label">
+                    </div>
+                    <!--Component category-->
+                    <div class="form-group">
+                      <label for="component-category">Category</label>
+                      <input id="component-category" name="component-category" placeholder="Enter or select a category" class="custom-select form-control-border border-width-2" list="component-category-select">
+                      <datalist id="component-category-select">
+                      <?php
+                      $sql = "CALL sp_kategorileriGetir()";
+
+                      $result = $conn->query($sql, PDO::FETCH_ASSOC);
+
+                      if ($result->rowCount() > 0) {
+
+                        $resultSet= $result->fetchAll(PDO::FETCH_ASSOC);
+
+                        foreach ($resultSet as $row) {
+                          echo '<option id="cid-'.$row["id"].'">'.$row["ad"]."</option>";
+                        }
+                      } ?>
+                      </datalist>
+                    </div>
+                    <div class="form-group">
+                      <label for="component-category-description">Category description</label>
+                      <textarea type="text" rows="3" class="form-control form-control-border border-width-2" id="component-category-description" name="component-category-description" placeholder="Enter a description"></textarea>
+                    </div>
+                    <!--Component sub category-->
+                    <div class="form-group">
+                      <label for="component-subcategory">Sub category</label>
+                      <select id="component-subcategory" name="component-subcategory" class="custom-select form-control-border border-width-2">
+                        <option value="0">Optional: Select a sub category</option>
+                        <?php
+                        if ($result->rowCount() > 0) {
+
+                          foreach ($resultSet as $row) {
+                            echo '<option id="scid-'.$row["id"].'">'.$row["ad"]."</option>";
+                          }
+                        } ?>
+                      </select>
+                    </div>
+                    <!--Onaylama butonu-->
+                    <div class="modal-footer justify-content-between">
+                      <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+                      <button id="urun-ekleme-modal-apply-button" type="submit" class="btn btn-outline-success">Apply</button>
+                    </div>
+                  </form>
+                </div>
+              <!-- /.card-body -->
+            </div>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+</div>

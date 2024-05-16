@@ -1,15 +1,5 @@
-
-
 <?php
-session_start();
-
-include("db_config.php");
-
-$ERR_EMAIL_EMPTY=-1;
-$ERR_PASS_EMPTY=-2;
-$ERR_UNKNOWN=-3;
-$ERR_LOGIN_AUTH_FAIL=-4;
-$SUCCESS=1;
+include "db_config.php";
 
 if (isset($_POST['email']) && isset($_POST['password'])) {
 
@@ -24,10 +14,12 @@ if (isset($_POST['email']) && isset($_POST['password'])) {
 	$passwd = validate($_POST['password']);
 
 	if (empty($email)) {
-		echo $ERR_EMAIL_EMPTY;
+		array_push($_SESSION["session-toast-logs"],
+					array("sender"=>"Login", "status"=>"error" , "message"=>"Email is  required!"));
 
 	}else if(empty($passwd)){
-		echo $ERR_PASS_EMPTY;
+		array_push($_SESSION["session-toast-logs"],
+					array("sender"=>"Login", "status"=>"error" , "message"=>"Password is required!"));
 	}else{
 
 		//database login function returns either 1 or 0
@@ -42,11 +34,13 @@ if (isset($_POST['email']) && isset($_POST['password'])) {
 				$_SESSION['login-email'] = $email;
 				$_SESSION["loggedIn"]=true;
 
-				echo $SUCCESS;
+				array_push($_SESSION["session-toast-logs"],
+					array("sender"=>"Login", "status"=>"success" , "message"=>"Welcome, $email"));
 
 
 			}else{
-				echo $ERR_LOGIN_AUTH_FAIL;
+				array_push($_SESSION["session-toast-logs"],
+					array("sender"=>"Login", "status"=>"error" , "message"=>"Wrong email or password!"));
 				$_SESSION["loggedIn"]=false;
 			}
 	}

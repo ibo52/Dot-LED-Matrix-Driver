@@ -1,3 +1,9 @@
+<?php  if( isset($_SESSION["loggedIn"])  && $_SESSION['loggedIn']==true ){
+  header("Location: index.php?route=search-page2");
+} ?>
+<!--Controller script:login -->
+<script src="js/login.js"></script>
+<!--div: page content-->
 <div class="content-wrapper" style="padding:100px;">
   <div class="login-box content-wrapper">
     <!-- /.login-logo -->
@@ -6,16 +12,16 @@
         <a href="#" class="h1"><b><i class="fas fa-door-open"></i> Welcome </b></a>
       </div>
       <div class="card-body">
-        <p class="login-box-msg">Sign in to start your session</p>
+        <p class="login-box-msg">Sign in to use Shelf System</p>
         <?php if ( isset($_SESSION['login-error']) ){
           echo'<p class="login-box-msg">'.$_SESSION['login-error'].'</p>';
         } ?>
 
         <!-- FORM-->
-        <form action="api_login" method="post">
+        <form id="login-form" action="" method="post">
           <!-- Email field-->
           <div class="input-group mb-3">
-            <input type="email" name="email" class="form-control" placeholder="Enter email">
+            <input type="email" id="login-email" name="email" class="form-control" placeholder="Enter email">
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-envelope"></span>
@@ -24,7 +30,7 @@
           </div>
           <!-- Password field-->
           <div class="input-group mb-3">
-            <input type="password" name="password" class="form-control" placeholder="Enter password">
+            <input type="password" id="login-password" name="password" class="form-control" placeholder="Enter password">
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-lock"></span>
@@ -42,7 +48,7 @@
             </div>
             <!-- /.col -->
             <div class="col-4">
-              <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+              <button id="login-form-button" type="submit" class="btn btn-outline-primary btn-block">Sign In</button>
             </div>
             <!-- /.col -->
           </div>

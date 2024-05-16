@@ -1,0 +1,22 @@
+<!--Toast to show certain messages on top of page-->
+<div id="toastsContainerTopRight" class="toasts-top-right fixed">
+    <?php
+    //api dosyalarından gelen bilgi, hata ya da sonuç mesajları
+
+    if( isset($_SESSION["session-toast-logs"]) ){
+
+    foreach($_SESSION["session-toast-logs"] as $logs){
+
+    ?>
+    <div class="toast bg-success fade show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="mr-auto"><?php echo $logs["sender"]; ?></strong>
+            <small><?php echo $logs["status"]; ?></small>
+            <button data-dismiss="toast" type="button" class="ml-2 mb-1 close" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="toast-body"><?php echo $logs["message"]; ?></div>
+    </div>
+    <?php }}?>
+</div>

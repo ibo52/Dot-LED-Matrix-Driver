@@ -1,0 +1,19 @@
+<?php
+include_once("db_config.php");
+
+$sql = "select * from ürün where id=1";
+
+$result = $conn->query($sql, PDO::FETCH_ASSOC);
+
+if ($result->rowCount() > 0) {
+
+    $resultSet= $result->fetchAll(PDO::FETCH_ASSOC);
+
+    $resultSet=json_encode($resultSet, JSON_FORCE_OBJECT);
+
+    return $resultSet;
+
+}else{
+    echo json_encode(Array());
+}
+?>

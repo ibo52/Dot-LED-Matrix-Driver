@@ -1,0 +1,27 @@
+<?php
+include_once("db_config.php");
+
+$sql = "select id,ad,etiket from ürün";
+
+$result = $conn->query($sql, PDO::FETCH_ASSOC);
+
+    $data=array();
+    $resultSet= $result->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($resultSet as $row) {
+        $v=array_values($row);
+        $buttonHTML='<button type="button" id="'.$row["id"].'" name="blink-button" class="btn btn-block btn-outline-danger btn-lg">'
+        .'<i class="fas fa-lightbulb"></i> Blink</button>';
+        array_push($v, $buttonHTML);
+        array_push($data, $v);
+    }
+
+
+    $output = array(
+        "draw"    => intval($_POST["draw"]),
+			"recordsTotal"  => count($data), // Toplam tablodaki veri sayımızı ekle
+			"recordsFiltered" => count($data), // Toplam filtrelenmiş veri sayısını ekle
+			"data"    => $data); // Verileri depoladığımız değişkeni ekle);
+
+    echo json_encode($output);
+?>

@@ -1,0 +1,3 @@
+$(function(){
+    toastr.info("denememe jondf")
+});

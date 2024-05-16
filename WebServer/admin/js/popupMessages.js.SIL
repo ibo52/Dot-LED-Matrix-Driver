@@ -1,0 +1,56 @@
+function showMessages(){
+
+  $.ajax({
+      type: "GET",
+      url: 'api/ajax/api_get_toast_notifications.php',
+      dataType: 'json',
+      success: function (response) {
+                    if( !('error' in response) ) {
+
+                        response.forEach(element => {
+                          //status, message ve sender adlı json keyleri var
+                          setTimeout(() => {
+                            $(document).Toasts('create', {
+                              title:element.sender,
+                              body: element.message,
+                              subtitle:element.status,
+                              autohide: true,
+                              delay: 3000
+                            })
+
+                            },500);
+                        });
+                    }
+                    else {
+                      //console.log("jquery ajax error")
+                    }
+              }
+    });
+/*
+      var xmlhttp=new XMLHttpRequest();
+      xmlhttp.onreadystatechange=function() {
+        if (this.readyState==4 && this.status==200) {
+
+            const toast_logs=JSON.parse(this.responseText);
+
+            toast_logs.forEach(element => {
+                //status, message ve sender adlı json keyleri var
+                setTimeout(() => {
+                  $(document).Toasts('create', {
+                    title:element.sender,
+                    body: element.message,
+                    subtitle:element.status,
+                    autohide: true,
+                    delay: 3000
+                  })
+
+                  },500);
+                //document.getElementById("toastsContainerTopRight").innerHTML="deneme";
+            });
+        }
+      }
+      xmlhttp.open("GET","api/api_get_toast_notifications.php",true);
+      xmlhttp.send();*/
+}
+console.log("popupMessage.js dosyası yiklendi")
+//showMessages()

@@ -1,3 +1,9 @@
+<?php  if( isset($_SESSION["loggedIn"])  && $_SESSION['loggedIn']==true ){
+  header("Location: index.php?route=search-page2");
+} ?>
+<!--Controller script:login -->
+<script src="js/register.js"></script>
+<!--div: page content-->
 <div class="content-wrapper" style="padding:100px;">
 <div class="register-box content-wrapper">
   <div class="card card-outline card-primary">
@@ -7,10 +13,10 @@
     <div class="card-body">
       <p class="login-box-msg">Register a new membership</p>
 
-      <form action="api_register.php" method="post">
+      <form id="register-form" action="" method="post">
         <!-- name field-->
         <div class="input-group mb-3">
-          <input type="text" name="name" class="form-control" placeholder="Enter name">
+          <input type="text" name="register-name" class="form-control" placeholder="Enter name">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-user"></span>
@@ -19,7 +25,7 @@
         </div>
         <!-- surname field-->
         <div class="input-group mb-3">
-          <input type="text" name="surname" class="form-control" placeholder="Enter surname">
+          <input type="text" name="register-surname" class="form-control" placeholder="Enter surname">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-user"></span>
@@ -28,7 +34,7 @@
         </div>
         <!--email field-->
         <div class="input-group mb-3">
-          <input type="email" name="email" class="form-control" placeholder="Enter email">
+          <input type="email" name="register-email" class="form-control" placeholder="Enter email">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-envelope"></span>
@@ -37,7 +43,7 @@
         </div>
         <!-- Password field-->
         <div class="input-group mb-3">
-          <input type="password" name="password" class="form-control" placeholder="Enter a password">
+          <input type="password" name="register-password" class="form-control" placeholder="Enter a password">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-lock"></span>
@@ -46,7 +52,7 @@
         </div>
         <!-- Password check field-->
         <div class="input-group mb-3">
-          <input type="password" name="password-again" class="form-control" placeholder="Enter password again">
+          <input type="password" name="register-password-again" class="form-control" placeholder="Enter password again">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-lock"></span>
@@ -56,7 +62,7 @@
         <div class="row">
           <!-- /.col -->
           <div class="col-12">
-            <button type="submit" class="btn btn-primary btn-block">Register</button>
+            <button id="register-form-button" type="submit" class="btn btn-outline-primary btn-block">Register</button>
           </div>
           <!-- /.col -->
         </div>
