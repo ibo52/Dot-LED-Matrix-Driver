@@ -14,16 +14,16 @@
 #define NUM_OF_LEFT_REG 2
 
 
-char ssid[] = "ORYAZ";            //ag adi
-char pass[] = "OrWf_1453571!*";   //ad sifresi
+char ssid[] = "Mut Home";//"ORYAZ";            //ag adi
+char pass[] = "10610933452ysm";//"OrWf_1453571!*";   //ad sifresi
 
 LedServer* ledServer;
 
 void setup(){
     Serial.begin(9600);
-    Serial.println("ESP led Sunucu deneme");
+    Serial.println("ESP32 LED Server Initializing");
 
-    Serial.print("aga baglaniliyor: ");
+    Serial.print("Connecting to AP: ");
     Serial.print(ssid);
     WiFi.begin(ssid, pass);
 
@@ -32,10 +32,10 @@ void setup(){
         delay(300);
     }
 
-    Serial.print("\nbaglandi. IP address: ");
+    Serial.print("\nConnected. IP address: ");
     Serial.println(WiFi.localIP());
 
-    
+
     ledServer=new LedServer(NUM_OF_LEFT_REG, NUM_OF_TOP_REG,
         LEFT_PIN_LATCH,LEFT_PIN_DATA, LEFT_PIN_CLOCK,
         TOP_PIN_LATCH, TOP_PIN_DATA, TOP_PIN_CLOCK,

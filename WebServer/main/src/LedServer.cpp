@@ -13,7 +13,7 @@ LedServer::LedServer(int numOfLeftReg, int numOfTopReg,
             left_latchPin,left_dataPin,left_clockPin
             ,top_latchPin,top_dataPin,top_clockPin);
 
-    server.begin();  
+    server.begin();
 }
 LedServer::~LedServer(){
     delete this->display;
@@ -25,7 +25,7 @@ void LedServer::loop(){
 
   if (client) {
 
-    Serial.print("[LED Server]: yeni baglanti istemi: ");
+    Serial.print("[LED Server]: new request from: ");
     Serial.println(client.remoteIP());
 
     String currentLine = "";                // make a String to hold incoming data from the client
@@ -49,7 +49,7 @@ void LedServer::loop(){
             client.println();
 
             // the content of the HTTP response follows the header:
-            client.print("<p> To send data to device: type, for example: http://this-device-address/NUMERIC_DATA<p>");
+            client.print("<p> To send data to device: type, for example: <i>http://this-device-address/NUMERIC_DATA</i><p>");
 
             // The HTTP response ends with another blank line:
             client.println();
@@ -59,33 +59,32 @@ void LedServer::loop(){
           } else {
           /*if you got a newline,check if request contains data,
           then clear currentLine for new clients*/
-            
+
             int idx=currentLine.indexOf("GET /");
             if(idx>-1){
               idx+=5;//"GET /" have 5 chars, thus increment by 5 to skip that chars
 
               String data=currentLine.substring(idx , currentLine.length() );
-              
+
               data=data.substring(0, data.indexOf(" "));
 
               if(  !data.equals("") ){//anasayfaya değil de parametre gönderdiyse
-              
-                Serial.print("[LED Server]: ayrıştırılan \"GET\" data:");
+
+                Serial.print("[LED Server]:\"GET\" data parsed:");
                 Serial.println(data);
-                
+
                 int16_t ledNum=this->toNumeric(data);
 
                 if(ledNum>-1 && (  ledNum < this->display->getNumLeds()  ) ){
                 //gelen veri numerik ise yanacak ledi sec
 
                 //Sonra LEDController.cpp dosyasından ledi yakacak fonksiyonu çağıracağız
-                
-                Serial.print("[Led Server]: matristeki ");
+
                 Serial.print(ledNum);
-                Serial.print(". led yakılacak");
+                Serial.print("'th LED on the matrix will blink");
 
                 //this->display->blinkLed(ledNum);
-                
+
                 }//else: numerik degil, 0dan kucuk, led sayısından buyuk
 
               }
@@ -100,13 +99,13 @@ void LedServer::loop(){
     }
     // close the connection:
     client.stop();
-    Serial.println("[LED Server]: istemci baglantiyi kesti");
+    Serial.println("[LED Server]: Client has dropped the connection");
   }
 }
 
 //return integer if string does not contains anything but digits( except signs -+ at begin)
 int16_t LedServer::toNumeric(String string){
-  
+
   byte check=string.charAt(0);
   unsigned int i=0;
 
@@ -121,7 +120,7 @@ int16_t LedServer::toNumeric(String string){
     //numerik deger degilse -1 gönder
     if(  check<'0'  || check>'9' ){
       Serial.print(i);
-      Serial.print(". index 0-9 degil:");
+      Serial.print(". index is not a number (0-9):");
       Serial.println(string);
       return -1;
     }
