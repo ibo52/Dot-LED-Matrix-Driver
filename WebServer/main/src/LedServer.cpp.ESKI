@@ -1,0 +1,184 @@
+#include "LedServer.hpp"
+
+LedServer::LedServer(int numOfLeftReg, int numOfTopReg,
+                int left_latchPin, int left_dataPin, int left_clockPin,
+                int top_latchPin, int top_dataPin, int top_clockPin
+                ,int serverPort){
+
+    //init webserver
+    server=WiFiServer(serverPort);
+
+    token="qw1a";
+
+    //init led display matrix
+    display=new LEDMatrix(numOfLeftReg,numOfTopReg,
+            left_latchPin,left_dataPin,left_clockPin
+            ,top_latchPin,top_dataPin,top_clockPin);
+
+    server.begin();
+}
+LedServer::~LedServer(){
+    delete this->display;
+}
+
+String LedServer::getToken(){
+    return this->token;
+}
+
+void LedServer::setToken(String token){
+  this->token=token;
+}
+
+void LedServer::loop(){
+
+  WiFiClient client = server.available();   // listen for incoming clients
+
+  if (client) {
+    //server processes POST requests
+    Serial.print("[LED Server]: new request from: ");
+    Serial.println(client.remoteIP());
+
+    String currentLine = "";                // make a String to hold incoming data from the client
+
+    while (client.connected()) {            // loop while the client's connected
+
+      if (client.available()) {             // if there's bytes to read from the client,
+
+        char c = client.read();             // read a byte, then
+        Serial.write(c);                    // print it out the serial monitor
+
+        if (c == '\n') {                    // if the byte is a newline character, next line is POST json data
+
+          // if the current line is blank, you got two newline characters in a row.
+          // that's the end of the client HTTP request, so send a response:
+
+          if (currentLine.length() == 0) {
+
+            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
+            // and a content-type so the client knows what's coming, then a blank line:
+            client.println("HTTP/1.1 200 OK");
+            client.println("Access-Control-Allow-Origin: *");
+            client.println("Content-type:text/html");
+            client.println();
+
+            // the content of the HTTP response follows the header:
+            client.print("<p> To send data to device: type, for example: <i>http://this-device-address/NUMERIC_DATA</i><p>");
+
+            // The HTTP response ends with another blank line:
+            client.println();
+
+            // break out of the while loop:
+            break;
+          } else {
+          /*if you got a newline,check if request contains data,
+          then clear currentLine for new clients*/
+
+            int idx=currentLine.indexOf("GET /");
+            if(idx>-1){
+              idx+=5;//"GET /" have 5 chars, thus increment by 5 to skip that chars
+
+              String data=currentLine.substring(idx , currentLine.length() );
+
+              data=data.substring(0, data.indexOf(" "));
+
+              if(  !data.equals("") ){//anasayfaya değil de parametre gönderdiyse
+
+                _GET_PARAM params=this->parseGET(data);
+
+                if( params.token.compareTo(this->getToken())!=0){
+                  client.println("HTTP/1.1 401 Unauthorized");
+                  client.println("Access-Control-Allow-Origin: *");
+                  client.println("Content-type:text/html");
+                  client.println();
+                  client.print("<p>You have no authentication to request operations on this server</p>");
+                  client.println();
+
+                  Serial.println("[LED Server]: Client's token does not match with server's!!");
+                  Serial.println("[LED Server]: Drop unauthorized client");
+                  break;
+                }
+
+                if(params.ledNum>-1 && (  params.ledNum < this->display->getNumLeds()  ) ){
+                //gelen veri numerik ise yanacak ledi sec
+
+                //Sonra LEDController.cpp dosyasından ledi yakacak fonksiyonu çağıracağız
+
+                Serial.print(params.ledNum);
+                Serial.println("'th LED on the matrix will blink");
+
+                //this->display->blinkLed(ledNum);
+
+                }//else: numerik degil, 0dan kucuk, led sayısından buyuk
+
+              }
+
+            }
+            currentLine = "";
+          }
+        } else if (c != '\r') {  // if you got anything else but a carriage return character,
+          currentLine += c;      // add it to the end of the currentLine
+        }
+      }
+    }
+    // close the connection:
+    client.stop();
+    Serial.println("[LED Server]: Client has dropped the connection");
+  }
+}
+
+//return integer if string does not contains anything but digits( except signs -+ at begin)
+String HTMLDecode(String address){
+
+// Create two pointers that point to the start of the data
+String leader = address;
+
+  // While we're not at the end of the string (current character not NULL)
+  int idx=leader.indexOf('%');
+  while (idx>-1) {
+    String hexStr=leader.substring(idx+1, idx+3);
+    char hex=strtoll(hexStr.c_str(), NULL, 16);
+    Serial.print("char:");
+    Serial.print(leader.substring(idx+1, idx+3));
+    Serial.print(", hex turned cahr:");
+    Serial.println(hex);
+
+    leader=leader.substring(0,idx)+hex+leader.substring(idx+3,leader.length());
+  }
+  Serial.print("HTML DECODED:");
+  Serial.println(leader);
+  return leader;
+}
+_GET_PARAM LedServer::parseGET(String string){
+  string=HTMLDecode(string);
+
+  //? denotes that there is get parameters
+  String GET_DATA=string.substring(string.indexOf('?')+1,string.length());
+  char separator='&';//other parameters diverse with ampersand, so we can split by searching it
+  int8_t idx=GET_DATA.lastIndexOf(separator);
+
+  int ledNum=-1;
+
+  _GET_PARAM _GET={-1, ""};//data to return
+
+  while( idx>-1 ){
+        /*Serial.print("GET DATA PARSE: ");*/
+        String parsed=GET_DATA.substring(idx+1,string.length());
+
+        if( parsed.indexOf("lednum")==0)//lednum parametresini arıyoruz
+          _GET.ledNum=parsed.substring(parsed.indexOf("=")+1, parsed.length()).toInt();
+        else if( parsed.indexOf("token")==0 )//token parametresini arıyoruz
+          _GET.token=parsed.substring(parsed.indexOf("=")+1, parsed.length());
+
+        //split the text for next loop
+        GET_DATA=GET_DATA.substring(0, idx);//kalan veri
+        idx=GET_DATA.lastIndexOf(separator);
+  }
+  //---process on last time to check remain from while loop---
+  if( GET_DATA.indexOf("lednum")==0)//lednum parametresini arıyoruz
+    _GET.ledNum=GET_DATA.substring(GET_DATA.indexOf("=")+1, GET_DATA.length()).toInt();
+  else if( GET_DATA.indexOf("token")==0 )//token parametresini arıyoruz
+    _GET.token=GET_DATA.substring(GET_DATA.indexOf("=")+1, GET_DATA.length());
+  //---process on last time to check remain from while loop---
+
+  return _GET;//lednum parametresini döndür
+}
