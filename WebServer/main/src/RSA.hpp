@@ -1,5 +1,5 @@
 #include<Arduino.h>
-
+#include "WiFi.h"
 
 //to find gcd
 
@@ -19,4 +19,6 @@ class RSA{
     static String encrypt(String data,int16_t n,int16_t e);
 
     static String decrypt(String data,int16_t n,int16_t d);
+
+    boolean handshake(WiFiClient client);
 };

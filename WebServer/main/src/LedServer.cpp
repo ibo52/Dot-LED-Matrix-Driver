@@ -2,8 +2,8 @@
 #include "ArduinoJson.h"
 #include "Enigma.hpp"
 #include "HTTPResponse.hpp"
-
-#define WEB_PAGE_ADDR "192.168.43.194"
+#include "HTTPClient.h"
+#define WEB_PAGE_ADDR "192.168.1.78"
 #define WEB_PAGE_API "admin/api/api_setDriverBoardInfo.php"
 
 LedServer::LedServer(int numOfLeftReg, int numOfTopReg,
@@ -26,7 +26,9 @@ LedServer::LedServer(int numOfLeftReg, int numOfTopReg,
 
     //inform database of ip,port, token of this server
     while( this->tokenUpdate()==false ){
-      Serial.println("[LedServer]: Could not inform database for init. Will be Retried in 1 sec until success..");
+      Serial.print("[LedServer]: Could not connected API address for init:");
+      Serial.print(WEB_PAGE_ADDR);
+      Serial.println(": Will be Retried in 1 sec until success..");
       delay(1000);
     }
 }
@@ -42,101 +44,52 @@ void LedServer::setToken(String token){
   this->token=token;
 }
 
+
+/*
+Loop the listening process of server*/
 void LedServer::loop(){
 
   WiFiClient client = server.available();   // listen for incoming clients
 
+  HTTPResponse http=HTTPResponse();
   if (client) {
     //server processes POST requests
     Serial.print("[LED Server]: new request from: ");
     Serial.println(client.remoteIP());
 
-    String currentLine = "";                // make a String to hold incoming data from the client
+    StaticJsonDocument<768> request=http.getResponse(client);
 
-    boolean isPostRequest=false;            //shows if it is not GET but POST
+    //received GET request
+    if(request["type"].as<String>()=="GET"){
 
-    while (client.connected()) {            // loop while the client's connected
+      HTTPResponse().respond(client, RESPONSE_OK,
+                  "<p style=\"font-size:4vw;\"> This Webserver serves for data with <b>POST</b> requests</p>");
 
-      if (client.available()) {             // if there's bytes to read from the client,
-
-        char c = client.read();             // read a byte, then
-        Serial.write(c);                    // print it out the serial monitor
-
-        if(c=='\n'){// if the byte is a newline character
-
-          // if the current line is blank, you got two newline characters in a row.
-          //only post data remained if POST requests
-          if(currentLine.length()==0){
-
-              //server response heere
-              if( !isPostRequest ){
-                HTTPResponse().respond(client, RESPONSE_OK,
-                  "<p style=\"font-size:4vw;\"> send data with <b>POST</b> requests</p>"
-                );
-                break;
-
-              }else{
-                break;
-              }
-          }else{
-            currentLine="";
-
-          }
-
-        }else if(c!='\r'){
-          currentLine+=c;
-        }
-
-        if(currentLine.endsWith("POST /")){
-          isPostRequest=true;
-        }
+    //received POST request
+    }else if(request["type"].as<String>()=="POST"){//process post requests
 
 
+      StaticJsonDocument<256> doc;
+      DeserializationError error = deserializeJson(doc, request["data"].as<String>());
 
-      }
-    }
-    if(isPostRequest){//process post requests
+      if( error ){
+        Serial.print("[LED Server]: Data is not json! --> ");
+        Serial.println(request["data"].as<String>());
 
-      int8_t counter=0;
-      String data="";
+        http.respond(client, RESPONSE_OK,
+          "<p>This server expects POST data as JSON object. Thus request could not processed</p>"
+          );
 
-      while(client.connected()){
+      }else{
 
-        if( client.available() ){
+        int8_t ledNum=doc["lednum"];
+        String token=doc["token"];
 
-          char c=client.read();
-          Serial.write(c);
-
-          data+=c;
-
-        }else{
-          if( counter<10){//retry to read 10 times, if not drop
-            counter++;
-            delay(10);
-          }else{
-            StaticJsonDocument<200> doc;
-            DeserializationError error = deserializeJson(doc, data);
-
-            HTTPResponse http=HTTPResponse();
-            if( error ){
-              Serial.print("[LED Server]: Data is not json! --> ");
-              Serial.println(data);
-
-              http.respond(client, RESPONSE_OK,
-                "<p>This server expects POST data as JSON object. Request could not processed</p>"
-                );break;
-            }
-
-            data="";
-
-            int8_t ledNum=doc["lednum"];
-            String token=doc["token"];
-
-            //token control
-            if( token.compareTo(this->getToken())!=0){
-              http.respond(client, RESPONSE_UNAUTH,
-                "<p>You have<b> no authentication</b> to request operations on this server</p>"
-              );
+        //token control
+        if( token.compareTo(this->getToken())!=0){
+          http.respond(client, RESPONSE_UNAUTH,
+            "<p>You have<b> no authentication</b> to request operations on this server</p>"
+          );
 
               Serial.print("[LED Server]: Client's token :'");
               Serial.print(token);
@@ -145,7 +98,7 @@ void LedServer::loop(){
               Serial.println("'");
               Serial.println("[LED Server]: Drop unauthorized client");
 
-            }else{
+        }else{
 
               // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
               // and a content-type so the client knows what's coming, then a blank line:
@@ -159,7 +112,8 @@ void LedServer::loop(){
                 Serial.print(ledNum);
                 Serial.println("'th LED on the matrix will blink");
 
-                //this->display->blinkLed(ledNum);
+                this->display->clear();
+                this->display->blinkLed(ledNum);
 
               }else{
                 Serial.print("[Led Matrix]: desired led index #");
@@ -167,19 +121,17 @@ void LedServer::loop(){
                 Serial.print(" exceeds max num of LEDs #");
                 Serial.println(this->display->getNumLeds());
               }
-            }
-
-            Serial.println();
-            break;
-          }
         }
       }
     }
+
     // close the connection:
     client.stop();
     Serial.println("[LED Server]: Client has dropped the connection");
     this->tokenUpdate(false);
+
   }
+
 }
 
 /*
@@ -201,49 +153,48 @@ boolean LedServer::tokenUpdate(boolean ignoreTime){
 
   //inform web page for esp32 ip, port, and token to be able to communicate
   if( driverBoard_api_client.connect(WEB_PAGE_ADDR, 80) ){
+    HTTPResponse http=HTTPResponse();
 
+    StaticJsonDocument<320> j;
+    j["ip"]=WiFi.localIP().toString();
+    j["boardId"]=1;
+    j["auth"]="qw1a";
+    j["port"]=String(this->port);
+    j["token"]=token;
 
-      driverBoard_api_client.print("GET /");
-      driverBoard_api_client.print(WEB_PAGE_API);
-      driverBoard_api_client.print("?ip=");
-      driverBoard_api_client.print(WiFi.localIP());
-      driverBoard_api_client.print("&boardId=1");
-      driverBoard_api_client.print("&auth=qw1a");//database side password
-      driverBoard_api_client.print("&port=");
-      driverBoard_api_client.print(this->port);
-      driverBoard_api_client.print("&token=");
-      driverBoard_api_client.println(token);
-      driverBoard_api_client.println(" HTTP/1.1");
-      driverBoard_api_client.print("Host: ");
-      driverBoard_api_client.println(WiFi.localIP());
-      driverBoard_api_client.println("Connection: close");
-      driverBoard_api_client.println();
+    String jsonStr;
+    serializeJson(j, jsonStr);
 
-    }else{
-        Serial.println("[Led Server]: Could not connect to web API to update token!");
-        return retval;
+    http.POST2(driverBoard_api_client, WEB_PAGE_API, jsonStr, false);
+
+    int8_t apiResponse=http.getResponse(driverBoard_api_client, false).toInt();
+
+    switch (apiResponse){
+    case 1:
+      Serial.println("[LedServer]: Token succesfully sended to WEB API");
+      this->setToken(token);
+      lastUpdateTime=millis();
+      retval=1;
+      break;
+
+    case -8:
+      Serial.print("[LedServer]: API: database get the request but not processed. Possibly authentication or response read issues:");
+      retval=0;
+      break;
+
+    default:
+      Serial.print("[LedServer]: API: Unknown retval from API:");
+      Serial.println(apiResponse);
+      retval=0;
+      break;
     }
 
-    while(1){
-        if(driverBoard_api_client.available()){
-            char response = driverBoard_api_client.read();
-
-            if(response=='1'){
-                Serial.println("[LedServer]: Token succesfully sended to WEB API");
-                this->setToken(token);
-                lastUpdateTime=millis();
-                retval=1;
-                break;
-
-            }else if(response='0'){
-                Serial.println("[LedServer]: API: database get the request but not processed. Possibly authentication issues");
-                retval=0;
-                break;
-            }
-        }
-    }
-    driverBoard_api_client.stop();
+  }else{
+    Serial.println("[Led Server]: Could not connect to web API to update token!");
     return retval;
+  }
+
+  return retval;
 }
 
 boolean LedServer::tokenUpdate(){

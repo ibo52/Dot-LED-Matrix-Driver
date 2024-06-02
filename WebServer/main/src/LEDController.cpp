@@ -23,10 +23,10 @@ LEDMatrix::LEDMatrix(int numOfLeftReg, int numOfTopReg,
                 int left_latchPin, int left_dataPin, int left_clockPin,
                 int top_latchPin, int top_dataPin, int top_clockPin
                 ){
-	
+
    TOP_REG=new byte[numOfTopReg];
    LEFT_REG=new byte[numOfLeftReg];
-        
+
    this->left_clockPin=left_clockPin;
    this->left_dataPin=left_dataPin;
    this->left_latchPin=left_latchPin;
@@ -41,10 +41,13 @@ LEDMatrix::LEDMatrix(int numOfLeftReg, int numOfTopReg,
    pinMode(left_latchPin, OUTPUT);
    pinMode(left_clockPin, OUTPUT);
    pinMode(left_dataPin, OUTPUT);
-        
+
    pinMode(top_latchPin, OUTPUT);
    pinMode(top_clockPin, OUTPUT);
    pinMode(top_dataPin, OUTPUT);
+
+   this->clear();
+   this->updateDisplay();
 }
 
 /*Tum ledleri sondur ve çıkışları toprakla*/
@@ -53,7 +56,7 @@ void LEDMatrix::clear(void){
    for (size_t i = 0; i < this->numLeftReg; i++) {
 		LEFT_REG[i] = 0xff;
    }
-   
+
    //tum voltaj girişini sıfırla
    for (size_t i = 0; i < this->numTopReg; i++) {
 	   TOP_REG[i] = 0;
@@ -81,13 +84,13 @@ void LEDMatrix::blinkLed(int satir, int sutun){
 
    int leftReg=sutun/8;
    int topReg=satir/8;
-   
+
    int leftPin=sutun%8;
    int topPin=satir%8;
-   
+
    bitWrite(TOP_REG[topReg], topPin,1);//voltaj girisi olan pin
    bitWrite(LEFT_REG[leftReg], leftPin,0);//topraklamaya giden pin
-   
+
    updateDisplay();
 }
 /*tablodaki ilgili tum register degerlerini gunceller*/
@@ -109,8 +112,8 @@ void LEDMatrix::regWrite(byte* shiftRegister, int registerCount, int dataPin, in
 	digitalWrite(latchPin, LOW);
 
 	for (int i = registerCount-1; i >=0; i--){
-	    
-		
+
+
 		//Get actual states for register
 		byte* states = &shiftRegister[i];
 

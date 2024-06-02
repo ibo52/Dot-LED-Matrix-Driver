@@ -6,18 +6,21 @@
 #define LED_SERVER_PORT 80
 
 //DISPLAY MATRIX PROPERTIES
+//shift reg pin 12(ST_CP)
 #define TOP_PIN_LATCH 4
+//shift reg pin 11(SH_CP)
 #define TOP_PIN_CLOCK 5
+//shift reg pin 14(DS)
 #define TOP_PIN_DATA 6
-#define NUM_OF_TOP_REG 1
+#define NUM_OF_TOP_REG 2
 
 #define LEFT_PIN_LATCH 0
 #define LEFT_PIN_CLOCK 0
 #define LEFT_PIN_DATA 0
-#define NUM_OF_LEFT_REG 0
+#define NUM_OF_LEFT_REG 1
 
-char ssid[] = "fatoşmodaevi";//"Mut Home";// "ORYAZ";//"TurkTelekom_TPE352_2.4GHz";//           //ag adi
-char pass[] = "hoopdedikdur";//"10610933452ysm";//"OrWf_1453571!*";//"hV9gm3U9FJx3";//   //ad sifresi
+char ssid[] = "Mut Home";//"TurkTelekom_TPE352_2.4GHz";//"fatoşmodaevi";//"ORYAZ";// //ag adi
+char pass[] = "10610933452ysm";//"hV9gm3U9FJx3";//"hoopdedikdur";//"OrWf_1453571!*";// //ad sifresi
 
 LedServer* ledServer;
 
@@ -48,7 +51,6 @@ void setup(){
         LEFT_PIN_LATCH,LEFT_PIN_DATA, LEFT_PIN_CLOCK,
         TOP_PIN_LATCH, TOP_PIN_DATA, TOP_PIN_CLOCK,
         LED_SERVER_PORT);
-
 
     /*Serial.begin(9600);
     Serial.println("Şifreleme: metin='deneme'");

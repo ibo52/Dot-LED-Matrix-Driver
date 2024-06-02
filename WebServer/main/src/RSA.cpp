@@ -81,3 +81,11 @@ String RSA::decrypt(String data, int16_t n, int16_t d){
 
     return deciphered;
 }
+
+boolean RSA::handshake(WiFiClient client){
+    //1. public key gönder
+    //2. şifreli mesajı private key ile çöz
+    //3. çözülen mesaj asimetrik key
+
+    return 1;
+}

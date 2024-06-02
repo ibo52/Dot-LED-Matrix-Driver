@@ -1,0 +1,5 @@
+RSA ile public keyleri göndersen yeter
+1.client serverdan rsa public alır
+2. client public key ile kendi anlık public keyini gönderir
+3. server kendi private ile client keyini bulur
+4. güvenli mesajlaşma
